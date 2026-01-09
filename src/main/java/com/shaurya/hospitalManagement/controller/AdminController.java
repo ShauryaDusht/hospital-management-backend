@@ -4,15 +4,14 @@ import com.shaurya.hospitalManagement.dto.PatientResponseDto;
 import com.shaurya.hospitalManagement.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/admin")
@@ -26,8 +25,6 @@ public class AdminController {
             @RequestParam(value = "page", defaultValue = "0") Integer pageNumber,
             @RequestParam(value = "size", defaultValue = "10") Integer pageSize
     ) {
-        User user = (User) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
-
         return ResponseEntity.ok(patientService.getAllPatients(pageNumber, pageSize));
     }
 }
