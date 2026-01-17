@@ -36,7 +36,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
 		<dependency>
@@ -69,7 +69,7 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-<!--	JWT 	-->
+<!--	JWT -->
 		<dependency>
 		        <groupId>io.jsonwebtoken</groupId>
 		        <artifactId>jjwt-api</artifactId>
@@ -87,8 +87,27 @@
 		        <version>0.12.6</version>
 		        <scope>runtime</scope>
 		</dependency>
-	</dependencies>
+<!--	OAuth -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
 
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-json</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+<!-- 	Dot Env -->
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+	</dependencies>
 	<build>
 		<plugins>
 			<plugin>
