@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,7 @@ public class AppointmentService {
     private final ModelMapper modelMapper;
 
     @Transactional
+    @Secured("ROLE_PATIENT")
     public AppointmentResponseDto createNewAppointment(CreateAppointmentRequestDto createAppointmentRequestDto) {
         Long doctorId = createAppointmentRequestDto.getDoctorId();
         Long patientId = createAppointmentRequestDto.getPatientId();
@@ -50,6 +52,7 @@ public class AppointmentService {
     }
 
     @Transactional
+    @PreAuthorize("hasAuthority ('appointment:write') OR #doctorId == authentication.principal.id)")
     public Appointment reAssignAppointmentToAnotherDoctor(Long appointmentId, Long doctorId) {
         Appointment appointment = appointmentRepository.findById(appointmentId).orElseThrow();
         Doctor doctor = doctorRepository.findById(doctorId).orElseThrow();
@@ -62,7 +65,7 @@ public class AppointmentService {
     }
 
     // only admin and doctor with his own id can call this function
-    @PreAuthorize("(hasRole('ADMIN')) OR (hasRole('DOCTOR') || #doctorId == authentication.principal.id)")
+    @PreAuthorize("(hasRole('ADMIN')) OR (hasRole('DOCTOR') AND #doctorId == authentication.principal.id)")
     public List<AppointmentResponseDto> getAllAppointmentsOfDoctor(Long doctorId) {
         Doctor doctor = doctorRepository.findById(doctorId).orElseThrow();
 
