@@ -1,9 +1,39 @@
 spring:
-  security.oauth2.client:
-    registration:
-      google:
-        client-id: ${GOOGLE_CLIENT_ID}
-        client-secret: ${GOOGLE_CLIENT_SECRET}
-      github:
-        client-id: ${GITHUB_CLIENT_ID}
-        client-secret: ${GITHUB_CLIENT_SECRET}
+  application:
+    name: hospitalManagement
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  # Import environment variables
+  config:
+    import: optional:file:.env[.properties]
+
+  # OAuth2 Configuration
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+
+# Server Configuration
+server:
+  port: 8080
+
+# JWT Configuration
+jwt:
+  secretKey: ${JWT_SECRET_KEY}

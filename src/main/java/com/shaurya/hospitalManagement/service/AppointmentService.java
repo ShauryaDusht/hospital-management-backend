@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -60,6 +61,8 @@ public class AppointmentService {
         return appointment;
     }
 
+    // only admin and doctor with his own id can call this function
+    @PreAuthorize("(hasRole('ADMIN')) OR (hasRole('DOCTOR') || #doctorId == authentication.principal.id)")
     public List<AppointmentResponseDto> getAllAppointmentsOfDoctor(Long doctorId) {
         Doctor doctor = doctorRepository.findById(doctorId).orElseThrow();
 

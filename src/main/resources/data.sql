@@ -1,22 +1,97 @@
-INSERT INTO patient (name, gender, birth_date, email, blood_group)
-VALUES
-    ('Shaurya Bisht', 'MALE', '1999-02-18', 'shaurya.bisht@example.com', 'B_POSITIVE'),
-    ('Ananya Roy', 'FEMALE', '1994-11-05', 'ananya.roy@example.com', 'O_NEGATIVE'),
-    ('Rohit Malhotra', 'MALE', '1987-06-22', 'rohit.malhotra@example.com', 'A_NEGATIVE'),
-    ('Pooja Kulkarni', 'FEMALE', '1991-09-14', 'pooja.kulkarni@example.com', 'AB_NEGATIVE'),
-    ('Vikram Choudhary', 'MALE', '1985-01-30', 'vikram.choudhary@example.com', 'B_NEGATIVE');
+-- =====================================================
+-- Hospital Management System - Database Fixtures
+-- =====================================================
 
-INSERT INTO doctor (name, specialization, email)
-VALUES
-    ('Dr. Meenal Joshi', 'Neurology', 'meenal.joshi@example.com'),
-    ('Dr. Kunal Bansal', 'Gastroenterology', 'kunal.bansal@example.com'),
-    ('Dr. Farah Khan', 'Pulmonology', 'farah.khan@example.com');
+-- Clear existing data (optional - comment out in production)
+-- TRUNCATE TABLE appointments, patients, doctors, insurance, departments, users CASCADE;
 
-INSERT INTO appointment (appointment_time, reason, doctor_id, patient_id)
-VALUES
-    ('2025-08-01 09:00:00', 'Migraine Evaluation', 1, 1),
-    ('2025-08-02 10:15:00', 'Stomach Pain', 2, 2),
-    ('2025-08-03 11:30:00', 'Breathing Difficulty', 3, 3),
-    ('2025-08-04 15:00:00', 'Routine Follow-up', 1, 4),
-    ('2025-08-05 17:45:00', 'Digestive Issues', 2, 5),
-    ('2025-08-06 08:00:00', 'Asthma Review', 3, 1);
+-- =====================================================
+-- DEPARTMENTS
+-- =====================================================
+INSERT INTO department (
+    id,
+    name,
+    description,
+    created_at,
+    updated_at
+) VALUES
+      (1,  'Cardiology',        'Heart and cardiovascular system care',        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (2,  'Neurology',         'Brain and nervous system treatment',           CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (3,  'Orthopedics',       'Bone, joint and muscle care',                  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (4,  'Pediatrics',        'Child health and development',                 CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (5,  'General Medicine',  'General health consultation',                  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (6,  'Dermatology',       'Skin and hair treatment',                      CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (7,  'ENT',               'Ear, Nose and Throat specialist',              CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (8,  'Gynecology',        'Women health and wellness',                    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (9,  'Ophthalmology',     'Eye care and vision treatment',                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (10, 'Psychiatry',        'Mental health and counseling',                 CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT (id) DO NOTHING;
+
+-- =====================================================
+-- USERS (Admin, Doctors, Patients)
+-- =====================================================
+
+-- Admin Users
+INSERT INTO users (
+    id,
+    username,
+    password,
+    name,
+    email,
+    roles,
+    auth_provider,
+    created_at,
+    updated_at
+) VALUES
+      (1, 'admin',  '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Rajesh Kumar', 'rajesh.kumar@hospital.com', 'ADMIN', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (2, 'admin2', '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Priya Sharma', 'priya.sharma@hospital.com', 'ADMIN', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT (id) DO NOTHING;
+
+-- Doctor Users
+INSERT INTO users (
+    id,
+    username,
+    password,
+    name,
+    email,
+    roles,
+    auth_provider,
+    created_at,
+    updated_at
+) VALUES
+      (3,  'dr.mehta',  '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Amit Mehta',    'amit.mehta@hospital.com',    'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (4,  'dr.verma',  '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Neha Verma',    'neha.verma@hospital.com',    'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (5,  'dr.singh',  '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Vikram Singh',  'vikram.singh@hospital.com',  'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (6,  'dr.reddy',  '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Lakshmi Reddy', 'lakshmi.reddy@hospital.com', 'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (7,  'dr.patel',  '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Karan Patel',   'karan.patel@hospital.com',   'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (8,  'dr.chopra', '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Anjali Chopra', 'anjali.chopra@hospital.com', 'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (9,  'dr.nair',   '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Suresh Nair',   'suresh.nair@hospital.com',   'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (10, 'dr.iyer',   '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Divya Iyer',    'divya.iyer@hospital.com',    'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (11, 'dr.gupta',  '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Rahul Gupta',   'rahul.gupta@hospital.com',   'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      (12, 'dr.das',    '$2a$10$N9qo8uLOickgx2ZMRZoMye7IxQWqEV3YEJxWmNXMlCGWKGxqPl9ua',
+       'Dr. Sneha Das',     'sneha.das@hospital.com',     'DOCTOR', 'LOCAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT (id) DO NOTHING;
+
+-- =====================================================
+-- Reset sequences
+-- =====================================================
+SELECT setval('department_id_seq',  (SELECT MAX(id) FROM department));
+SELECT setval('users_id_seq',       (SELECT MAX(id) FROM users));
+SELECT setval('doctor_id_seq',      (SELECT MAX(id) FROM doctor));
+SELECT setval('patient_id_seq',     (SELECT MAX(id) FROM patient));
+SELECT setval('insurance_id_seq',   (SELECT MAX(id) FROM insurance));
+SELECT setval('appointment_id_seq', (SELECT MAX(id) FROM appointment));
+
+
+-- Default password -> password123
