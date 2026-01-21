@@ -2,113 +2,116 @@
 
 A Spring Boot application for managing hospital operations including patient management, doctor appointments, and administrative functions.
 
+## Database Schema
+
+![ER Diagram](images/ER_Diagram.png)
+
+---
+
 ## Prerequisites
 
+### Option 1: Docker (Recommended)
+- Docker Desktop or Docker Engine
+- Docker Compose
+
+### Option 2: Local Development
 - Java 17 or higher
 - Maven 3.6+
 - PostgreSQL database
 
-## Configuration
-
-### Database Setup
-
-Create a PostgreSQL database and update the credentials in `application.yml`:
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: postgres
-```
-
-### Environment Variables
-
-Create a `.env` file in the project root with the following variables:
-
-```properties
-# JWT Configuration
-JWT_SECRET_KEY=your-secret-key-here
-
-# OAuth2 Google Configuration (Optional)
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-
-# OAuth2 GitHub Configuration (Optional)
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-client-secret
-```
-
-### Application Configuration
-
-The complete `application.yml` configuration:
-
-```yaml
-spring:
-  application:
-    name: hospitalManagement
-  
-  # Database Configuration
-  datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: postgres
-  
-  # JPA Configuration
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-  
-  # Import environment variables
-  config:
-    import: optional:file:.env[.properties]
-  
-  # OAuth2 Configuration
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-          github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
-
-# Server Configuration
-server:
-  port: 8080
-
-# JWT Configuration
-jwt:
-  secretKey: ${JWT_SECRET_KEY}
-```
-
 ## Running the Application
 
-### Verify Installations
+### Docker (Recommended)
+
+**First Time Setup:**
+
+1. **Navigate to project root**
+   ```bash
+   cd path/to/hospitalManagement
+   ```
+
+2. **Create environment file**
+   ```bash
+   cp .env-example .env
+   ```
+
+3. **Edit `.env` file and set your values** (especially `JWT_SECRET_KEY`)
+
+**Start Application:**
 
 ```bash
-java -version
-mvn -version
+# Build and start all services (app + database)
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# View only app logs
+docker-compose logs -f app
 ```
 
-### Navigate to Project Root
+**Application will be available at:** `http://localhost:8080`
+
+**Stop Application:**
 
 ```bash
+# Stop services
+docker-compose down
+
+# Stop and remove all data (deletes database)
+docker-compose down -v
+```
+
+**Rebuild after code changes:**
+
+```bash
+docker-compose up -d --build
+```
+
+**Access Database:**
+
+```bash
+# Connect to PostgreSQL container
+docker exec -it hospital-postgres psql -U postgres -d postgres
+
+# List tables
+\dt
+
+# Exit
+\q
+```
+
+---
+
+### Local Development (Without Docker)
+
+**Prerequisites:**
+- Install Java 17, Maven, and PostgreSQL locally
+
+**Setup:**
+
+1. **Create PostgreSQL database**
+   ```sql
+   CREATE DATABASE postgres;
+   ```
+
+2. **Update `application.yml`** with your database credentials
+
+3. **Create `.env` file**
+   ```bash
+   cp .env-example .env
+   ```
+
+**Run:**
+
+```bash
+# Navigate to project root
 cd path/to/hospitalManagement
-```
 
-### Clean and Build
-
-```bash
+# Clean and build
 mvn clean install
-```
 
-### Run the Application
-
-```bash
+# Run application
 mvn spring-boot:run
 ```
 
@@ -422,16 +425,6 @@ The application runs on port `8080` by default. You can change this in `applicat
 
 ### Database Initialization
 The application uses Hibernate's `ddl-auto: update` strategy, which will automatically create/update tables based on entity definitions.
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
 
 ---
 
