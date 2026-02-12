@@ -1,5 +1,6 @@
 package com.shaurya.hospitalManagement.error;
 
+import com.shaurya.hospitalManagement.security.RateLimitExceededException;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,4 +42,16 @@ public class GlobalExceptionHandler {
         ApiError apiError = new ApiError("An unexpected error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<RateLimitError> handleRateLimitExceededException(RateLimitExceededException ex) {
+        RateLimitError rateLimitError = new RateLimitError(
+                ex.getMessage(),
+                HttpStatus.TOO_MANY_REQUESTS,
+                ex.getRetryAfter(),
+                ex.getRemaining()
+        );
+        return new ResponseEntity<>(rateLimitError, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
 }

@@ -30,6 +30,22 @@ spring:
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
 
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: false # if enabled then we use ssl/tls connection
+      timeout: 60000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
 # Server Configuration
 server:
   port: 8080
@@ -37,3 +53,13 @@ server:
 # JWT Configuration
 jwt:
   secretKey: ${JWT_SECRET_KEY}
+
+# Rate Limiting Configuration
+rate:
+  limit:
+    login:
+      attempts: 5
+      duration: 3600
+    signup:
+      attempts: 3
+      duration: 86400

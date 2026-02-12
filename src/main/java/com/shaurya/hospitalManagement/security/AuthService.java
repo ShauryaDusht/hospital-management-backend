@@ -32,19 +32,40 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RateLimiterService rateLimiterService;
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
+        String identifier = loginRequestDto.getUsername();
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(), loginRequestDto.getPassword())
-        );
+        // Check rate limit before authentication
+        if (!rateLimiterService.isLoginAllowed(identifier)) {
+            long retryAfter = rateLimiterService.getLoginTimeUntilReset(identifier);
+            int remaining = rateLimiterService.getRemainingLoginAttempts(identifier);
+            throw new RateLimitExceededException(
+                    "Too many login attempts. Please try again after " + retryAfter + " seconds",
+                    retryAfter,
+                    remaining
+            );
+        }
 
-        User user = (User) authentication.getPrincipal();
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(), loginRequestDto.getPassword())
+            );
 
-        assert user != null;
-        String token = authUtil.generateAccessToken(user);
+            User user = (User) authentication.getPrincipal();
 
-        return new LoginResponseDto(token, user.getId());
+            assert user != null;
+            String token = authUtil.generateAccessToken(user);
+
+            // Reset rate limit on successful login
+            rateLimiterService.resetLoginAttempts(identifier);
+
+            return new LoginResponseDto(token, user.getId());
+        } catch (Exception e) {  // Catches all auth failures
+            rateLimiterService.recordLoginAttempt(identifier);
+            throw e;
+        }
     }
 
     public User signUpInternal(SignUpRequestDto signupRequestDto, AuthProviderType authProviderType, String providerId) {
@@ -72,8 +93,23 @@ public class AuthService {
         return userRepository.save(user);
     }
 
-    // login controller
     public SignupResponseDto signup(SignUpRequestDto signupRequestDto) {
+        String identifier = signupRequestDto.getUsername();
+
+        // Check rate limit before signup
+        if (!rateLimiterService.isSignupAllowed(identifier)) {
+            long retryAfter = rateLimiterService.getSignupTimeUntilReset(identifier);
+            int remaining = rateLimiterService.getRemainingSignupAttempts(identifier);
+            throw new RateLimitExceededException(
+                    "Too many signup attempts. Please try again after " + retryAfter + " seconds",
+                    retryAfter,
+                    remaining
+            );
+        }
+
+        // Record signup attempt
+        rateLimiterService.recordSignupAttempt(identifier);
+
         User user = signUpInternal(signupRequestDto, AuthProviderType.EMAIL, null);
         return new SignupResponseDto(user.getId(), user.getUsername());
     }
