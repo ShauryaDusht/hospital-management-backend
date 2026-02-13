@@ -8,6 +8,7 @@ import com.shaurya.hospitalManagement.entity.Patient;
 import com.shaurya.hospitalManagement.entity.User;
 import com.shaurya.hospitalManagement.entity.type.AuthProviderType;
 import com.shaurya.hospitalManagement.entity.type.RoleType;
+import com.shaurya.hospitalManagement.error.RateLimitError;
 import com.shaurya.hospitalManagement.repository.PatientRepository;
 import com.shaurya.hospitalManagement.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -33,16 +34,29 @@ public class AuthService {
     private final PatientRepository patientRepository;
     private final PasswordEncoder passwordEncoder;
     private final RateLimiterService rateLimiterService;
+    private final IpUtil ipUtil;
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
         String identifier = loginRequestDto.getUsername();
+        String clientIp = ipUtil.getClientIp();
 
-        // Check rate limit before authentication
+        // Check IP-based rate limit first
+        if (!rateLimiterService.isIpLoginAllowed(clientIp)) {
+            long retryAfter = rateLimiterService.getIpLoginTimeUntilReset(clientIp);
+            int remaining = rateLimiterService.getRemainingIpLoginAttempts(clientIp);
+            throw new RateLimitError.RateLimitExceededException(
+                    "Too many login attempts from this IP. Try again after " + retryAfter + " seconds",
+                    retryAfter,
+                    remaining
+            );
+        }
+
+        // Check identifier-based rate limit
         if (!rateLimiterService.isLoginAllowed(identifier)) {
             long retryAfter = rateLimiterService.getLoginTimeUntilReset(identifier);
             int remaining = rateLimiterService.getRemainingLoginAttempts(identifier);
-            throw new RateLimitExceededException(
-                    "Too many login attempts. Please try again after " + retryAfter + " seconds",
+            throw new RateLimitError.RateLimitExceededException(
+                    "Too many login attempts for this account. Try again after " + retryAfter + " seconds",
                     retryAfter,
                     remaining
             );
@@ -58,12 +72,15 @@ public class AuthService {
             assert user != null;
             String token = authUtil.generateAccessToken(user);
 
-            // Reset rate limit on successful login
+            // Reset rate limits on successful login
             rateLimiterService.resetLoginAttempts(identifier);
+            rateLimiterService.resetIpLoginAttempts(clientIp);
 
             return new LoginResponseDto(token, user.getId());
-        } catch (Exception e) {  // Catches all auth failures
+        } catch (Exception e) {
+            // Record failed attempts for both identifier and IP
             rateLimiterService.recordLoginAttempt(identifier);
+            rateLimiterService.recordIpLoginAttempt(clientIp);
             throw e;
         }
     }
@@ -77,7 +94,7 @@ public class AuthService {
                 .username(signupRequestDto.getUsername())
                 .providerId(providerId)
                 .providerType(authProviderType)
-                .roles(Set.of(RoleType.PATIENT)) // at start make everyone patient
+                .roles(Set.of(RoleType.PATIENT))
                 .build();
 
         if(authProviderType == AuthProviderType.EMAIL) {
@@ -95,23 +112,46 @@ public class AuthService {
 
     public SignupResponseDto signup(SignUpRequestDto signupRequestDto) {
         String identifier = signupRequestDto.getUsername();
+        String clientIp = ipUtil.getClientIp();
 
-        // Check rate limit before signup
-        if (!rateLimiterService.isSignupAllowed(identifier)) {
-            long retryAfter = rateLimiterService.getSignupTimeUntilReset(identifier);
-            int remaining = rateLimiterService.getRemainingSignupAttempts(identifier);
-            throw new RateLimitExceededException(
-                    "Too many signup attempts. Please try again after " + retryAfter + " seconds",
+        // Check IP-based rate limit first
+        if (!rateLimiterService.isIpSignupAllowed(clientIp)) {
+            long retryAfter = rateLimiterService.getIpSignupTimeUntilReset(clientIp);
+            int remaining = rateLimiterService.getRemainingIpSignupAttempts(clientIp);
+            throw new RateLimitError.RateLimitExceededException(
+                    "Too many signup attempts from this IP. Try again after " + retryAfter + " seconds",
                     retryAfter,
                     remaining
             );
         }
 
-        // Record signup attempt
-        rateLimiterService.recordSignupAttempt(identifier);
+        // Check identifier-based rate limit
+        if (!rateLimiterService.isSignupAllowed(identifier)) {
+            long retryAfter = rateLimiterService.getSignupTimeUntilReset(identifier);
+            int remaining = rateLimiterService.getRemainingSignupAttempts(identifier);
+            throw new RateLimitError.RateLimitExceededException(
+                    "Too many signup attempts. Try again after " + retryAfter + " seconds",
+                    retryAfter,
+                    remaining
+            );
+        }
 
-        User user = signUpInternal(signupRequestDto, AuthProviderType.EMAIL, null);
-        return new SignupResponseDto(user.getId(), user.getUsername());
+        // Record attempts
+        rateLimiterService.recordSignupAttempt(identifier);
+        rateLimiterService.recordIpSignupAttempt(clientIp);
+
+        try {
+            User user = signUpInternal(signupRequestDto, AuthProviderType.EMAIL, null);
+
+            // Reset rate limits on successful signup
+            rateLimiterService.resetSignupAttempts(identifier);
+            rateLimiterService.resetIpSignupAttempts(clientIp);
+
+            return new SignupResponseDto(user.getId(), user.getUsername());
+        } catch (Exception e) {
+            // Attempts already recorded above, just rethrow
+            throw e;
+        }
     }
 
     @Transactional
@@ -125,21 +165,14 @@ public class AuthService {
         User emailUser = userRepository.findByUsername(email).orElse(null);
 
         if(user == null && emailUser == null) {
-            // signup flow
-            // user never had any account
             String username = authUtil.determineUsernameFromOAuth2User(oAuth2User, registrationId, providerId);
             user = signUpInternal(new SignUpRequestDto(username, null, name, Set.of(RoleType.PATIENT)), providerType, providerId);
         } else if(user != null) {
-            // user already registered but now using oauth
-            // so we store email of the user
             if(email != null && !email.isBlank() && !email.equals(user.getUsername())) {
                 user.setUsername(email);
                 userRepository.save(user);
             }
         } else {
-            // emailUser - not null
-            // user - null
-            // means email is already registered
             throw new BadCredentialsException("This email is already registered with provider "+emailUser.getProviderType());
         }
 
