@@ -73,7 +73,7 @@ class InsuranceServiceTest {
 
     @Test
     @DisplayName("Should disassociate insurance from patient successfully")
-    void disaccociateInsuranceFromPatient_WhenPatientExists_ShouldRemoveInsurance() {
+    void disassociateInsuranceFromPatient_WhenPatientExists_ShouldRemoveInsurance() {
         // Arrange
         patient.setInsurance(insurance);
         when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
@@ -88,7 +88,7 @@ class InsuranceServiceTest {
 
     @Test
     @DisplayName("Should throw EntityNotFoundException when disassociating from non-existent patient")
-    void disaccociateInsuranceFromPatient_WhenPatientNotFound_ShouldThrowException() {
+    void disassociateInsuranceFromPatient_WhenPatientNotFound_ShouldThrowException() {
         // Arrange
         when(patientRepository.findById(anyLong())).thenReturn(Optional.empty());
 
