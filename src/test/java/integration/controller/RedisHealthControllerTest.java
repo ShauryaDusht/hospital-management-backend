@@ -1,4 +1,4 @@
-package unit.controller;
+package integration.controller;
 
 import com.shaurya.hospitalManagement.controller.RedisHealthController;
 import org.junit.jupiter.api.BeforeEach;
